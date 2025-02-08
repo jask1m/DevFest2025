@@ -15,11 +15,11 @@ class GraphState(BaseModel):
   approved: bool = False
 
 class ParallelState(BaseModel):
-  criteria: Dict[str, Any]
-  packet: Dict[str, Any] # todo fix schema
-
-  # msg for each agent node
+  criteria: Dict[str, Any] # todo: should this be Criteria obj?
+  packet: Dict[str, Any] # todo set to erik's schema
   payload_msg: str
-
+  dns_msg: str
+  port_msg: str
+  protocol_msg: str
   threat_detected: bool
   feedback: str
