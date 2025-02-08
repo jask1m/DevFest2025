@@ -17,9 +17,8 @@ class GraphState(BaseModel):
 class ParallelState(BaseModel):
   criteria: Dict[str, Any] # todo: should this be Criteria obj?
   packet: Dict[str, Any] # todo set to erik's schema
-  payload_msg: str
-  dns_msg: str
-  port_msg: str
-  protocol_msg: str
+  xss_agent_msg: str
+  SQLi_agent_msg: str
+  payload_agent_msg: str
   threat_detected: bool
   feedback: str
