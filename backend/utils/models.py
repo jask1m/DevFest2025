@@ -7,5 +7,10 @@ class Criteria(BaseModel):
   criteria: dict[str, Any]
 
 class GraphState(BaseModel):
-  pass
+    description: str
+    existing_criteria: List[Criteria] 
+    selected_criteria: Optional[str] = None
+    sent_from: Optional[str] = None
+    feedback: Optional[str] = None
+    approved: bool = False
 
