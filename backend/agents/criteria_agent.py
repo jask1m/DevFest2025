@@ -9,6 +9,21 @@ from langchain.prompts import ChatPromptTemplate
 class OutputSchema(BaseModel):
   name: str = Field(description="title of the selected critera")
 
+def format_criteria(criteria_list: List[Criteria]) -> str:
+    """Format a list of criteria objects for the prompt."""
+    return "\n".join([
+        f"""Title: {criteria.title}
+Description: {json.dumps(criteria.criteria, indent=2)}
+---""" 
+        for criteria in criteria_list
+    ])
+
+def prevent_hallucination(res_title: str, state: GraphState) -> str:
+    if res_title == "NO_MATCHES":
+        return res_title
+    existing_titles = {criteria.title for criteria in state.existing_criteria}
+    return res_title if res_title in existing_titles else "NO_MATCHES"
+
 TEMPLATE = """You are a network security expert tasked with analyzing network usage descriptions and matching them to existing monitoring criteria.
 
 EXISTING CRITERIA:
@@ -41,7 +56,7 @@ parser = PydanticOutputParser(pydantic_object=OutputSchema)
 output_parser = OutputFixingParser.from_llm(parser=parser, llm=llm)
 
 def criteria_agent(state: GraphState) -> Command:
-  criteria_list = state.existi
+  criteria_list = format_criteria(state.existing_criteria)
   chain = prompt | llm | output_parser
 
   try:
@@ -51,6 +66,7 @@ def criteria_agent(state: GraphState) -> Command:
     })
     print("initial res fetched: ", res)
     res_title = res.name
+    res_title = prevent_hallucination(res_title, state)
 
     if res_title != "NO_MATCHES":
         matching_criteria = next((c for c in state.existing_criteria if c.title == res_title), None)
