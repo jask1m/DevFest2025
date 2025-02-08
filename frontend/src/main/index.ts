@@ -1,7 +1,8 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { spawn } from 'child_process'
 
 function createWindow(): void {
   // Create the browser window.
@@ -58,7 +59,23 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+
   })
+  const pythonScriptPath = path.join(app.getAppPath(), "python", "test.py");
+
+  let python = spawn("python3", [pythonScriptPath]);
+
+  python.stdout.on("data", (data) => {
+    console.log(`Python Output: ${data}`);
+  });
+
+  python.stderr.on("data", (data) => {
+    console.error(`Python Error: ${data}`);
+  });
+
+  python.on("close", (code) => {
+    console.log(`Python process exited with code ${code}`);
+  });
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
