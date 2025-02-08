@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Search Demo</title>
+    <title>Voice and Text Search Demo</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -41,7 +41,7 @@
 
         #search-bar {
             width: 100%;
-            padding: 12px 40px 12px 20px; /* Adjust padding for icons */
+            padding: 12px 40px 12px 20px;
             font-size: 16px;
             border: 2px solid #ccc;
             border-radius: 8px;
@@ -56,7 +56,7 @@
 
         .mic-icon, .stop-icon {
             position: absolute;
-            right: 10px; /* Both icons on the right */
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
             font-size: 24px;
@@ -66,11 +66,11 @@
         }
 
         .mic-icon {
-            display: inline-block; /* Show mic icon by default */
+            display: inline-block;
         }
 
         .stop-icon {
-            display: none; /* Hide stop icon by default */
+            display: none;
         }
 
         .mic-icon:hover, .stop-icon:hover {
@@ -96,13 +96,14 @@
 <body>
 
 <div class="container">
-    <h1>Voice Search Demo</h1>
+    <h1>Voice and Text Search Demo</h1>
     <div class="search-container">
-        <input type="text" id="search-bar" placeholder="Say something..." readonly>
+        <input type="text" id="search-bar" placeholder="Say something or type here...">
         <i class="fas fa-microphone mic-icon" id="mic-icon"></i>
         <i class="fas fa-stop stop-icon" id="stop-icon"></i>
     </div>
     <div class="status" id="status"></div>
+    <div id="search-results"></div> <!-- Display search results here -->
 </div>
 
 <script>
@@ -110,6 +111,7 @@
     const stopIcon = document.getElementById("stop-icon");
     const searchBar = document.getElementById("search-bar");
     const statusDiv = document.getElementById("status");
+    const searchResults = document.getElementById("search-results");
 
     let mediaRecorder;
     let audioChunks = [];
@@ -117,7 +119,7 @@
 
     // Start recording
     micIcon.addEventListener("click", async () => {
-        if (isRecording) return;  // Prevent multiple clicks during recording
+        if (isRecording) return;
 
         statusDiv.textContent = "Listening...";
         statusDiv.classList.remove("success", "error");
@@ -131,6 +133,19 @@
             };
 
             mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                audioChunks = [];
+
+                // Save the audio file for debugging (client-side)
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const a = document.createElement("a");
+                a.href = audioUrl;
+                a.download = "debug_recording.wav"; // File name
+                a.textContent = "Download Recording for Debugging";
+                document.body.appendChild(a); // Add download link to the page
+                a.click(); // Trigger the download
+                document.body.removeChild(a); // Remove the link after download
+
                 // Create a File object from the Blob
                 const audioFile = new File([audioBlob], "recording.wav", { type: "audio/wav" });
 
@@ -157,13 +172,13 @@
                     }
 
                     const data = await response.json();
-                    console.log("API Response Data:", data);
+                    console.log("API Response Data:", data); // Log the full response
 
                     if (data.text) {
-                        searchBar.value = data.text;
+                        searchBar.value = data.text; // Insert transcription into search box
                         statusDiv.textContent = "Transcription successful!";
                         statusDiv.classList.add("success");
-                        runSearch(data.text);
+                        runSearch(data.text); // Run search with transcribed text
                     } else {
                         statusDiv.textContent = "Error: No transcription found in the response.";
                         statusDiv.classList.add("error");
@@ -174,10 +189,11 @@
                     console.error("Error:", error);
                 }
             };
+
             mediaRecorder.start();
             isRecording = true;
-            micIcon.style.display = "none";  // Hide microphone icon
-            stopIcon.style.display = "inline-block";  // Show stop icon
+            micIcon.style.display = "none"; // Hide microphone icon
+            stopIcon.style.display = "inline-block"; // Show stop icon
         } catch (err) {
             console.error("Error accessing microphone:", err);
             statusDiv.textContent = "Error accessing microphone. Please ensure microphone permissions are granted.";
@@ -191,9 +207,23 @@
 
         mediaRecorder.stop();
         isRecording = false;
-        micIcon.style.display = "inline-block";  // Show microphone icon
-        stopIcon.style.display = "none";  // Hide stop icon
+        micIcon.style.display = "inline-block"; // Show microphone icon
+        stopIcon.style.display = "none"; // Hide stop icon
         statusDiv.textContent = "Stopped recording.";
+    });
+
+    // Run search logic
+    function runSearch(query) {
+        // Replace this with your actual search logic
+        searchResults.innerHTML = `<p>Search results for: <strong>${query}</strong></p>`;
+        console.log("Searching for:", query);
+    }
+
+    // Allow text input search
+    searchBar.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            runSearch(searchBar.value);
+        }
     });
 </script>
 
