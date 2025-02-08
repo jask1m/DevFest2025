@@ -6,6 +6,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain.output_parsers import OutputFixingParser
 from langchain.prompts import ChatPromptTemplate
 from typing import List
+import json
 
 class OutputSchema(BaseModel):
   name: str = Field(description="title of the selected critera")
