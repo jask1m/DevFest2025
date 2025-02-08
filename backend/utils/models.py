@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Any
+from typing import Any, List, Optional
 
 class Criteria(BaseModel):
   title: str
