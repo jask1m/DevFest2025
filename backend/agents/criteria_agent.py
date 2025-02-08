@@ -1,15 +1,15 @@
 from agents.base import llm
 from utils.models import Criteria, GraphState
 from langgraph.types import Command
-from pydantic import BaseModel, Field
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain.output_parsers import OutputFixingParser
+from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain.prompts import ChatPromptTemplate
 from typing import List
 import json
 
-class OutputSchema(BaseModel):
-  name: str = Field(description="title of the selected critera")
+response_schema = ResponseSchema(
+  name="title",
+  description="The title of the matching criteria or 'NO_MATCHES' if no good match is found",
+)
 
 def format_criteria(criteria_list: List[Criteria]) -> str:
     """Format a list of criteria objects for the prompt."""
@@ -51,23 +51,26 @@ CRITICAL REQUIREMENTS:
 - Do NOT return modified, partial, or similar-looking titles
 - Do NOT attempt to combine or modify existing criteria titles
 - Only return a SINGLE exact match, never multiple matches
-"""
+
+{format_instructions}"""
 
 prompt = ChatPromptTemplate.from_template(template=TEMPLATE)
-parser = PydanticOutputParser(pydantic_object=OutputSchema)
-output_parser = OutputFixingParser.from_llm(parser=parser, llm=llm)
+output_parser=StructuredOutputParser.from_response_schemas([response_schema])
 
 def criteria_agent(state: GraphState) -> Command:
+  print("Reached the Criteria Agent node!")
   criteria_list = format_criteria(state.existing_criteria)
+  format_instructions = output_parser.get_format_instructions()
   chain = prompt | llm | output_parser
 
   try:
     res = chain.invoke({
       "criteria_list": criteria_list,
-      "description": state.description
+      "description": state.description,
+      "format_instructions": format_instructions
     })
     print("initial res fetched: ", res)
-    res_title = res.name
+    res_title = res["title"]
     res_title = prevent_hallucination(res_title, state)
 
     if res_title != "NO_MATCHES":
@@ -83,4 +86,4 @@ def criteria_agent(state: GraphState) -> Command:
         print("sending to new_criteria_agent ....")
         return Command(goto="new_criteria_agent")
   except Exception as e:
-    print("error invoking the chain:", e)
+    print("ERROR invoking the chain in criteria_agent:", e)
