@@ -107,5 +107,3 @@ def qa_agent(state: GraphState) -> Command:
 
   except Exception as e:
     print("error invoking the chain in qa_agent:", e)
-
-
