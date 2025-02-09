@@ -2,19 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { spawn, exec } from 'child_process'
-import { promisify } from 'util'
-const execAsync = promisify(exec);
+import { spawn } from 'child_process'
 
-// Function to check if we have root/admin privileges
-async function checkPrivileges() {
-  if (process.platform === 'win32') {
-    const { stdout } = await execAsync('net session');
-    return stdout.length > 0;
-  } else {
-    return process?.getuid?.() === 0;
-  }
-}
 async function runWithPrivileges() {
   console.log(`Requesting privileges via pkexec...`);
 
@@ -27,6 +16,7 @@ async function runWithPrivileges() {
 
   python.on("close", (code) => {
     console.log(`Python process exited with code ${code}`);
+    app.quit()
   });
 
   python.on("error", (err) => {
