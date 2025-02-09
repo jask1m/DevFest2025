@@ -34,6 +34,11 @@ export default function App() {
       if (data.error) {
         throw new Error(data.error)
       }
+      console.log(data);
+      const selected = data["response"]["selected_criteria"];
+      const crit = data["response"]["existing_criteria"].filter(x => x.title == selected)[0];
+      const scapy_filter = crit["scapy_str"];
+      window.electron.ipcRenderer.send('run-with-privileges', scapy_filter);
 
       setUseCase(inputValue)
     } catch (err) {

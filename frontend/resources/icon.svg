@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="gloq_icon.svg"
+   xml:space="preserve"
+   id="svg5"
+   version="1.1"
+   viewBox="0 0 150 150"
+   height="150mm"
+   width="150mm"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.94892969"
+     inkscape:cx="228.15178"
+     inkscape:cy="240.79761"
+     inkscape:window-width="1920"
+     inkscape:window-height="998"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g83" /><defs
+     id="defs2"><linearGradient
+   inkscape:collect="always"
+   id="linearGradient26827"><stop
+     style="stop-color:#800080;stop-opacity:1"
+     offset="0"
+     id="stop26823" /><stop
+     style="stop-color:#d45500;stop-opacity:1"
+     offset="1"
+     id="stop26825" /></linearGradient><inkscape:path-effect
+   effect="mirror_symmetry"
+   start_point="1.5931433,219.69098"
+   end_point="1.5931433,330.01234"
+   center_point="1.5931433,274.85166"
+   id="path-effect23743"
+   is_visible="true"
+   lpeversion="1.2"
+   lpesatellites=""
+   mode="free"
+   discard_orig_path="false"
+   fuse_paths="false"
+   oposite_fuse="false"
+   split_items="false"
+   split_open="false"
+   link_styles="false" />
+	
+	
+
+		
+		
+		
+		
+	<linearGradient
+   inkscape:collect="always"
+   xlink:href="#linearGradient26827"
+   id="linearGradient26829"
+   x1="30.797691"
+   y1="232.52342"
+   x2="234.50581"
+   y2="-13.089458"
+   gradientUnits="userSpaceOnUse" /></defs><g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-29.346798,-27.842176)"><g
+       id="g83"
+       transform="matrix(0.3273632,0,0,0.3273632,22.038281,27.68791)"><g
+         id="g23836"
+         transform="matrix(1.0616808,0,0,1.0616808,13.126044,-13.630887)"
+         style="stroke-width:11.50896239;stroke-dasharray:none;stroke:none;fill-opacity:1;fill:url(#linearGradient26829)"><rect
+           style="fill:url(#linearGradient26829);fill-opacity:1;stroke:none;stroke-width:11.50896239;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+           id="rect548"
+           width="395.06082"
+           height="399.22568"
+           x="26.92754"
+           y="29.463036"
+           ry="41.740269" /></g><g
+         id="g494"
+         transform="translate(22.325409,77.222565)"
+         style="fill:#ffffff"><path
+           d="m 229.60534,0.00401184 c -57.6,-0.5 -104.8,45.80000016 -105.3,103.39999816 -0.5,57.6 45.8,104.8 103.4,105.3 h 36.2 v -39.1 h -34.3 c -36,0.4 -65.6,-28.4 -66,-64.5 -0.4,-36.099998 28.4,-65.599998 64.5,-65.999998 v 0 c 0.5,0 1,0 1.5,0 36,0 65.2,29.2 65.4,65.199998 v 0 96.1 0 c 0,35.7 -29.1,64.8 -64.7,65.2 -17.1,-0.1 -33.4,-7 -45.4,-19.1 l -27.7,27.7 c 19.2,19.3 45.2,30.3 72.4,30.5 h 1.4 c 56.9,-0.8 102.6,-47 102.9,-103.9 v -99.1 c -1.4,-56.499998 -47.7,-101.59999816 -104.3,-101.69999816 z"
+           id="path8"
+           style="fill:#ffffff" /><path
+           id="path4"
+           d="m 229.10399,60.183925 c 12.94852,0 23.45078,10.502268 23.45078,23.450765 0,9.00745 -5.08503,16.8272 -12.5376,20.75541 l 12.5376,43.72458 -46.90288,-0.32994 12.66531,-43.32945 c -7.52119,-3.90614 -12.66531,-11.76249 -12.66531,-20.8206 0,-12.948497 10.50361,-23.450765 23.4521,-23.450765 z"
+           style="stroke-width:0.842784;fill:#ffffff"
+           sodipodi:nodetypes="ssccccss" /></g></g></g><style
+     type="text/css"
+     id="style2">
+	.st0{display:none;}
+	.st1{display:inline;}
+</style></svg>
