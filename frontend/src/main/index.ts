@@ -28,7 +28,7 @@ function parseScapyPacket(dump) {
 async function runWithPrivileges(scapy_filter: string) {
   const isWindows = platform() === 'win32';
   const isMac = platform() === 'darwin';
-  
+
   // Determine the privilege escalation command based on OS
   let privilegeCommand: string;
   if (isWindows) {
@@ -45,7 +45,7 @@ async function runWithPrivileges(scapy_filter: string) {
   const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
 
   const python = spawn(privilegeCommand, [pythonExecutablePath, pythonScriptPath, scapy_filter], {
-    stdio: "inherit",
+    stdio: ["inherit", 'pipe', 'pipe']
   });
 
   python.stdout?.on('data', function (data) {
