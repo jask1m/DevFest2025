@@ -1,22 +1,28 @@
-from utils.models import GraphState
+from utils.models import GraphState, Criteria
 from langgraph.types import Command
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain.prompts import ChatPromptTemplate
 from agents.base import llm
+import json
 
+# Define the new schema for parsing criteria responses
 new_criteria_schema = [
     ResponseSchema(
         name="title",
-        description="A short, snake_case title that describes the network monitoring use case"
+        description="A short, snake_case title that describes the network monitoring use case",
     ),
     ResponseSchema(
-        name="description", 
-        description="A clear description of the use case and what type of network traffic should be monitored"
+        name="description",
+        description="A clear description of the use case and what type of network traffic should be monitored",
     ),
     ResponseSchema(
         name="criteria",
-        description="A JSON object containing the monitoring criteria including protocols, ports, track_fields, and alert_conditions"
-    )
+        description="A JSON object containing the monitoring criteria including protocols, ports, track_fields, and alert_conditions",
+    ),
+    ResponseSchema(
+        name="scapy_str",
+        description="A string representation of the criteria in Berkeley Packet format for scapy filtering",
+    ),
 ]
 
 TEMPLATE = """You are a network security expert tasked with creating monitoring criteria for specific network usage patterns.
@@ -55,6 +61,7 @@ REQUIREMENTS:
 2. The criteria object must include: protocols (array), ports (array), track_fields (array), and alert_conditions (object)
 3. Remove any comments or annotations from the JSON - it must be pure, valid JSON
 4. Ensure all special characters are properly escaped
+5. Additionally, provide a Scapy string (scapy_str) representation of the criteria which must be in Berkeley Packet Formatting.
 
 {qa_feedback}
 
@@ -63,42 +70,54 @@ REQUIREMENTS:
 prompt = ChatPromptTemplate.from_template(template=TEMPLATE)
 criteria_parser = StructuredOutputParser.from_response_schemas(new_criteria_schema)
 
+
 def new_criteria_agent(state: GraphState) -> Command:
-  print("Reached the New Criteria Agent node!")
-  qa_feedback = ""
-  if state.sent_from and state.sent_from == "qa_agent" and state.feedback:
-    qa_feedback = f"""
-      QUALITY ASSURANCE FEEDBACK:
-      The previous criteria had the following issues that need to be addressed:
-      {state.feedback}
+    print("Reached the New Criteria Agent node!")
+    qa_feedback = ""
 
-      Please ensure the new criteria addresses these concerns.
-    """
+    # Add quality assurance feedback if provided
+    if state.sent_from and state.sent_from == "qa_agent" and state.feedback:
+        qa_feedback = f"""
+          QUALITY ASSURANCE FEEDBACK:
+          The previous criteria had the following issues that need to be addressed:
+          {state.feedback}
 
-  chain = prompt | llm | output_parser
-  try:
-    res = chain.invoke({
-      "description": state.description,
-      "qa_feedback": qa_feedback
-    })
-    print("new criteria agent response: ", res)
-    criteria_dict = res["criteria"]
+          Please ensure the new criteria addresses these concerns.
+        """
 
-    new_criteria = Criteria(
+    # Prepare the prompt with user description and QA feedback
+    chain = prompt | llm | criteria_parser
+
+    try:
+        res = chain.invoke(
+            {"description": state.description, "qa_feedback": qa_feedback}
+        )
+        print("new criteria agent response: ", res)
+
+        # Parse the returned JSON criteria
+        criteria_dict = json.loads(res["criteria"])
+
+        # Create a new Criteria object, including the scapy_str
+        new_criteria = Criteria(
             title=res["title"],
             description=res["description"],
-            criteria=criteria_dict
+            criteria=criteria_dict,
+            scapy_str=res["scapy_str"],  # Add the scapy_str here
         )
-    updated_criteria = state.existing_criteria + [new_criteria]
-    return Command(
+
+        # Update the existing criteria with the new one
+        updated_criteria = state.existing_criteria + [new_criteria]
+
+        # Return the updated state with the new criteria selected and sent for QA
+        return Command(
             update={
                 "existing_criteria": updated_criteria,
                 "selected_criteria": new_criteria.title,
                 "sent_from": "new_criteria_agent",
-                "feedback": None
+                "feedback": None,
             },
-            goto="qa_agent"
+            goto="qa_agent",
         )
-  except Exception as e:
-    print("error invoking the chain in new_criteria_agent:", e)
-    return Command(goto="new_criteria_agent")
+    except Exception as e:
+        print("error invoking the chain in new_criteria_agent:", e)
+        return Command(goto="new_criteria_agent")

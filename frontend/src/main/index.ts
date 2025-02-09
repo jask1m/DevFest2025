@@ -4,13 +4,13 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn } from 'child_process'
 
-async function runWithPrivileges() {
+async function runWithPrivileges(scapy_filter: string) {
   console.log(`Requesting privileges via pkexec...`);
 
   const pythonScriptPath = path.join(app.getAppPath(), "python", "logger.py");
   const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
 
-  const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath], {
+  const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath, scapy_filter], {
     stdio: "inherit",
   });
 
@@ -82,7 +82,9 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
 
   })
-  runWithPrivileges();
+  ipcMain.on('run-with-privileges', (event, scapy_filter) => {
+    runWithPrivileges(scapy_filter);
+  });
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
