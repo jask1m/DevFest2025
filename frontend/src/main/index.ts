@@ -45,7 +45,7 @@ async function runWithPrivileges(scapy_filter: string) {
   const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
 
   const python = spawn(privilegeCommand, [pythonExecutablePath, pythonScriptPath, scapy_filter], {
-    stdio: ['inherit', 'pipe', 'pipe']
+    stdio: "inherit",
   });
 
   python.stdout?.on('data', function (data) {
