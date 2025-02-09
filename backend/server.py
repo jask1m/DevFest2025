@@ -9,7 +9,8 @@ import uuid
 from sentence_transformers import SentenceTransformer
 from utils.config import create_llm
 from typing import Dict, List, Any
-
+import os
+from groq import Groq
 
 app = FastAPI()
 origins = ["http://localhost:5173"]
@@ -28,6 +29,9 @@ chroma_client = chromadb.PersistentClient(path="./chroma")
 collection = chroma_client.get_or_create_collection(name="collection")
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
+groq_client = Groq(
+    api_key=os.environ.get("GROQ_API_KEY")
+)
 
 @app.get("/")
 def root():
@@ -53,7 +57,7 @@ async def handle_query(request: Request):
     )
 
     try:
-        res = workflow.invoke(initial_state)  # returns a GraphState object
+        res = workflow.invoke(initial_state, config={"recursion_limit": 10})  # returns a GraphState object
         new_criteria_list = res["existing_criteria"]
 
         if new_criteria_list != current_criteria:
@@ -133,9 +137,12 @@ async def handle_store(request: Request):
         return {"error": str(e)}
 
 
-@app.get("/search")
-async def handle_search(query: str):
+@app.post("/search")
+async def handle_search(request: Request):
+
     try:
+        data = await request.json()
+        query = data.get("query")
         query_embedding = embedder.encode(query).tolist()
         results = collection.query(
             query_embeddings=[query_embedding],
@@ -157,47 +164,45 @@ async def handle_search(query: str):
 
 async def getRAG(query: str, search_results: Dict[str, List]) -> str:
     try:
+        # Build context with clearer structure and sections
         context = ""
-        for i in range(len(search_results["documents"][0])):
-            metadata = search_results["metadatas"][0][i]
-            context += f"\nSecurity Analysis {i + 1}:\n"
-            context += f"XSS Analysis: {metadata['xss_agent_msg']}\n"
-            context += f"SQL Injection Analysis: {metadata['SQLi_agent_msg']}\n"
-            context += f"Payload Analysis: {metadata['payload_agent_msg']}\n"
-            context += f"Threat Detected: {metadata['threat_detected']}\n"
-            context += f"Feedback: {metadata['feedback']}\n"
-            context += "-" * 50 + "\n"
+        for i in range(len(search_results['documents'][0])):
+            metadata = search_results['metadatas'][0][i]
+            context += f"\nAnalysis Record {i+1}:\n"
+            context += "------\n"
+            context += f"XSS Finding: {metadata['xss_agent_msg']}\n"
+            context += f"SQL Injection Finding: {metadata['SQLi_agent_msg']}\n"
+            context += f"Payload Finding: {metadata['payload_agent_msg']}\n"
+            context += f"Threat Status: {'⚠️ Threat Detected' if metadata['threat_detected'] else 'No Threat Detected'}\n"
+            context += f"Security Note: {metadata['feedback']}\n"
+            context += "------\n"
 
-        prompt = f"""Given the following security analyses and the user's question: "{query}", 
-        provide a comprehensive yet concise summary of the relevant findings.
-        
-        Security Analyses:
-        {context}
-        
-        Please analyze these results and provide:
-        1. A direct answer to the user's question
-        2. Key findings from the relevant security analyses
-        3. Any patterns or notable concerns that should be highlighted
-        
-        Keep the response focused and relevant to the user's specific query."""
+        prompt = f"""You are a specialized rag search engine. Your task is to answer the following query using only the provided security analysis records.
 
-        llm = create_llm()
+User Query: "{query}"
 
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a cybersecurity analysis assistant. Provide clear, accurate summaries of security findings.",
-            },
-            {"role": "user", "content": prompt},
-        ]
+Security Analysis Records:
+{context}
 
-        response = llm.chat.completions.create(
-            messages=messages,
+Using this information, generate a response that is concise, specific, and supports findings with direct quotes. Additionall, if the response contains information about malicious activity, include some actionable steps the user can take to handle this based on what the security analysis records say."""
+
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a security search engine assistant that provides evidence-based answers using only information from security analysis records. Always support findings with direct quotes."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            model="mixtral-8x7b-32768",
             temperature=0.1,
         )
-
-        return response.choices[0].message.content
-
+        
+        return chat_completion.choices[0].message.content
+        
     except Exception as e:
         print(f"Error in getRAG: {str(e)}")
         raise e
