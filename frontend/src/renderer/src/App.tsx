@@ -41,9 +41,13 @@ export default function App() {
       window.electron.ipcRenderer.send('run-with-privileges', scapy_filter);
 
       setUseCase(inputValue)
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error:", err)
-      setError(err instanceof Error ? err.message : "An error occurred while processing your request")
+      if (err.message.startsWith("Recursion limit of 10")) {
+        setError("Please enter a more specific description.");
+      } else {
+        setError("An error occurred while processing your request");
+      }
     } finally {
       setIsLoading(false)
     }
