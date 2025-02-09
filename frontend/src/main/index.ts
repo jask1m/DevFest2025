@@ -4,7 +4,7 @@ import { platform } from 'os'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn } from 'child_process'
-
+let win: BrowserWindow | null = null;
 function parseScapyPacket(dump) {
   const packetDict = {};
   let layer = "Eth";
@@ -39,6 +39,11 @@ async function runWithPrivileges(scapy_filter: string) {
     const jobj = parseScapyPacket(data)
 
     console.log(jobj.toString());
+    if (win) {
+      win.webContents.send('packet-data', jobj);
+      console.log("window found")
+    }
+    else console.log("no window")
   });
   python.on("close", (code) => {
     console.log(`Python process exited with code ${code}`);
@@ -59,8 +64,9 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
+      sandbox: false,
+      contextIsolation: true
+    },
   })
   mainWindow.once('ready-to-show', () => {
     mainWindow.maximize();
@@ -82,6 +88,7 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  win = mainWindow;
 }
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

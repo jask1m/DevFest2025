@@ -30,6 +30,10 @@ const generateMockLog = (): NetworkLog => {
   }
 }
 
+window.api.onPacketData((data) => {
+  console.log('Received packet data:', data);
+  // Handle the packet data here
+});
 export default function LogStore() {
   const [logs, setLogs] = useState<NetworkLog[]>([])
 

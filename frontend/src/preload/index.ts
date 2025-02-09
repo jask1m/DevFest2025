@@ -2,7 +2,11 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
-const api = {}
+const api = {
+  runWithPrivileges: (filter: string) => ipcRenderer.send('run-with-privileges', filter),
+  onPacketData: (callback: (data: string) => void) =>
+    ipcRenderer.on('packet-data', (_event, data) => callback(data)),
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

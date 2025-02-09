@@ -4,7 +4,6 @@ import SearchPanel from "./search-panel"
 interface DashboardProps {
   useCase: string
 }
-
 export default function Main({ useCase }: DashboardProps) {
   return (
     <div className="flex flex-col h-screen min-w-screen bg-black">
