@@ -1,7 +1,7 @@
 from utils.models import ParallelState
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-from agents.base import llm
+from agents.base import reasoning_llm
 
 output_schema = [
     ResponseSchema(
@@ -61,7 +61,7 @@ def decision_node(state: ParallelState):
       print("wait actualy umm ....")
     # raise ValueError("All agents must provide feedback")
   
-  chain = prompt | llm | parser
+  chain = prompt | reasoning_llm | parser
   try:
     res = chain.invoke({
       "xss_agent_msg": state.xss_agent_msg,
