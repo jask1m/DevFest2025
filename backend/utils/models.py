@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 
 class Criteria(BaseModel):
   title: str
@@ -15,7 +15,6 @@ class GraphState(BaseModel):
   approved: bool = False
 
 class ParallelState(BaseModel):
-  criteria: Dict[str, Any] # todo: should this be Criteria obj?
   packet: Dict[str, Any] # todo set to erik's schema
   xss_agent_msg: str
   SQLi_agent_msg: str
