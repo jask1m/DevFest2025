@@ -1,5 +1,6 @@
 import LogStore from "./LogStore"
 import SearchPanel from "./search-panel"
+import PacketChart from "./PacketChart"
 
 interface DashboardProps {
   useCase: string

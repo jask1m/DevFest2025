@@ -42,9 +42,13 @@ export default function Landing() {
       window.electron.ipcRenderer.send('run-with-privileges', scapy_filter);
 
       setUseCase(inputValue)
-    } catch (err) {
+    } catch (err: any) {
+      if (err.startsWith("Recursion limit")) {
+        setError("Please enter a more specific description.")
+      } else {
+        setError("An error occurred while processing your request")
+      }
       console.error("Error:", err)
-      setError(err instanceof Error ? err.message : "An error occurred while processing your request")
     } finally {
       setIsLoading(false)
     }
