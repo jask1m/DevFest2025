@@ -13,14 +13,6 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-    contextBridge.exposeInMainWorld(
-      'api', {
-      startSniffer: () => ipcRenderer.invoke('start-sniffer'),
-      stopSniffer: () => ipcRenderer.invoke('stop-sniffer'),
-      onSnifferData: (callback) => ipcRenderer.on('sniffer-data', callback),
-      onSnifferError: (callback) => ipcRenderer.on('sniffer-error', callback)
-    }
-    );
   } catch (error) {
     console.error(error)
   }
