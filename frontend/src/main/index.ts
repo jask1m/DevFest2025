@@ -10,7 +10,7 @@ async function runWithPrivileges(scapy_filter: string) {
   const pythonScriptPath = path.join(app.getAppPath(), "python", "logger.py");
   const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
 
-const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath, scapy_filter], {
+  const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath, scapy_filter], {
     stdio: "inherit",
   });
 
