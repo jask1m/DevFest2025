@@ -6,6 +6,7 @@ from utils.models import GraphState, ParallelState
 import chromadb
 import uuid
 from sentence_transformers import SentenceTransformer
+from utils.config import create_llm
 
 
 app = FastAPI()
@@ -129,3 +130,79 @@ async def handle_store(request: Request):
     except Exception as e:
         print(f"Error in /store endpoint: {str(e)}")
         return {"error": str(e)}
+
+
+@app.get("/search")
+async def handle_search(query: str):
+    try:
+        query_embedding = embedder.encode(query).tolist()
+        results = collection.query(
+            query_embeddings=[query_embedding],
+            n_results=3,
+            include=["documents", "metadatas"]
+        )
+        
+        if not results['documents'][0]:
+            return {"response": "No relevant security analyses found."}
+        
+        rag_response = await getRAG(query, results)
+        
+        return {
+            "response": rag_response,
+            "matches_found": len(results['documents'][0])
+        }
+        
+    except Exception as e:
+        print(f"Error in /search endpoint: {str(e)}")
+        return {"error": str(e)}
+
+
+async def getRAG(query: str, search_results: Dict[str, List]) -> str:
+    try:
+        context = ""
+        for i in range(len(search_results['documents'][0])):
+            metadata = search_results['metadatas'][0][i]
+            context += f"\nSecurity Analysis {i+1}:\n"
+            context += f"XSS Analysis: {metadata['xss_agent_msg']}\n"
+            context += f"SQL Injection Analysis: {metadata['SQLi_agent_msg']}\n"
+            context += f"Payload Analysis: {metadata['payload_agent_msg']}\n"
+            context += f"Threat Detected: {metadata['threat_detected']}\n"
+            context += f"Feedback: {metadata['feedback']}\n"
+            context += "-" * 50 + "\n"
+
+        prompt = f"""Given the following security analyses and the user's question: "{query}", 
+        provide a comprehensive yet concise summary of the relevant findings.
+        
+        Security Analyses:
+        {context}
+        
+        Please analyze these results and provide:
+        1. A direct answer to the user's question
+        2. Key findings from the relevant security analyses
+        3. Any patterns or notable concerns that should be highlighted
+        
+        Keep the response focused and relevant to the user's specific query."""
+
+        llm = create_llm()
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a cybersecurity analysis assistant. Provide clear, accurate summaries of security findings.",
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+
+        response = llm.chat.completions.create(
+            messages=messages,
+            temperature=0.1,
+        )
+        
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        print(f"Error in getRAG: {str(e)}")
+        raise e
