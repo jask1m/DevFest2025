@@ -35,6 +35,7 @@
     "electron-updater": "^6.1.7",
     "lucide-react": "^0.475.0",
     "postcss": "^8.5.1",
+    "recharts": "^2.15.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7"
   },

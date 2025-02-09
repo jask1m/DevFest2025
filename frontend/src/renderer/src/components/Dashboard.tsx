@@ -1,4 +1,5 @@
 import LogStore from "./LogStore"
+import SearchPanel from "./search-panel"
 
 interface DashboardProps {
   useCase: string

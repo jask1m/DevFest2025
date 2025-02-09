@@ -33,17 +33,17 @@ const generateMockLog = (): NetworkLog => {
 export default function LogStore() {
   const [logs, setLogs] = useState<NetworkLog[]>([])
 
-  useEffect(() => {
-    const initialLogs = Array(10).fill(null).map(generateMockLog)
-    setLogs(initialLogs)
-  }, [])
+  // useEffect(() => {
+  //   const initialLogs = Array(10).fill(null).map(generateMockLog)
+  //   setLogs(initialLogs)
+  // }, [])
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLogs((prevLogs) => [generateMockLog(), ...prevLogs])
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [])
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setLogs((prevLogs) => [generateMockLog(), ...prevLogs])
+  //   }, 3000)
+  //   return () => clearInterval(interval)
+  // }, [])
 
   const getBadgeVariant = (type: NetworkLog["type"]) => {
     switch (type) {
