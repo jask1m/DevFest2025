@@ -137,9 +137,61 @@ async def handle_store(request: Request):
         return {"error": str(e)}
 
 
+@app.post("/generate-diagram")
+async def generate_diagram(request: Request):
+    try:
+        data = await request.json()
+        solution = data.get("solution")
+        
+        prompt = f"""Generate a simple, high-level Mermaid flowchart diagram for the following security solution:
+                    {solution}
+
+                    Requirements for the diagram:
+                    1. Use 'flowchart TD' for vertical layout (top-down)
+                    2. Keep it high-level with maximum 4-6 main nodes
+                    3. Use simple, one-directional flow
+                    4. Each node text should be concise (maximum 4-5 words)
+                    5. Focus on the main security solution steps only
+                    6. Avoid complex branching or parallel paths
+                    7. Use clear, simple shapes (mainly rectangles)
+
+                    The diagram should be immediately understandable at a glance.
+                    Return ONLY the Mermaid diagram code without any explanation or markdown code blocks."""
+
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a technical diagram generator that creates simple, high-level Mermaid flowcharts for security concepts. Focus on clarity and simplicity over detail."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            model="mixtral-8x7b-32768",
+            temperature=0.1,
+        )
+        
+        mermaid_code = chat_completion.choices[0].message.content.strip()
+        if mermaid_code.startswith("```mermaid"):
+            mermaid_code = mermaid_code.replace("```mermaid", "").strip()
+        if mermaid_code.startswith("```"):
+            mermaid_code = mermaid_code.replace("```", "").strip()
+        
+        # Ensure it starts with flowchart TD
+        if not mermaid_code.startswith("flowchart TD"):
+            mermaid_code = "flowchart TD\n" + mermaid_code.replace("flowchart LR", "").replace("graph LR", "")
+        
+        return {"diagram": mermaid_code}
+        
+    except Exception as e:
+        print(f"Error in generate-diagram endpoint: {str(e)}")
+        return {"error": str(e)}
+
+
 @app.post("/search")
 async def handle_search(request: Request):
-
     try:
         data = await request.json()
         query = data.get("query")
@@ -179,12 +231,12 @@ async def getRAG(query: str, search_results: Dict[str, List]) -> str:
 
         prompt = f"""You are a specialized rag search engine. Your task is to answer the following query using only the provided security analysis records.
 
-User Query: "{query}"
+        User Query: "{query}"
 
-Security Analysis Records:
-{context}
+        Security Analysis Records:
+        {context}
 
-Using this information, generate a response that is concise, specific, and supports findings with direct quotes. Additionall, if the response contains information about malicious activity, include some actionable steps the user can take to handle this based on what the security analysis records say."""
+        Using this information, generate a response that is concise, specific, and supports findings with direct quotes. Additionally, based on the response and information about malicious activity, include three actionable steps the user can take to handle this based on what the security analysis records say."""
 
         chat_completion = groq_client.chat.completions.create(
             messages=[
@@ -206,4 +258,3 @@ Using this information, generate a response that is concise, specific, and suppo
     except Exception as e:
         print(f"Error in getRAG: {str(e)}")
         raise e
-
