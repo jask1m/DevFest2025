@@ -3,11 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from utils.workflow import create_workflow, create_parallel_workflow
 from utils.CriteriaStorage import CriteriaStorage
 from utils.models import GraphState, ParallelState
-import json
+import chromadb
+import uuid
+from sentence_transformers import SentenceTransformer
 
 
 app = FastAPI()
-# origins = ["*"]
 origins = ["http://localhost:5173"]
 app.add_middleware(
     CORSMiddleware,
@@ -20,6 +21,9 @@ workflow = create_workflow()
 criteria_storage = CriteriaStorage()
 parallel_workflow = create_parallel_workflow()
 
+chroma_client = chromadb.PersistentClient(path="./chroma")
+collection = chroma_client.get_or_create_collection(name="collection")
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
 @app.get("/")
 def root():
@@ -80,4 +84,48 @@ async def handle_analysis(request: Request):
         return {"response": res}
     except Exception as e:
         print("ERROR invoking the chain in /analysis:", e)
+        return {"error": str(e)}
+
+
+@app.post("/store")
+async def handle_store(request: Request):
+    try:
+        data = await request.json()
+        state: ParallelState = data.get("state")
+        
+        if not state:
+            return {"error": "No state provided"}
+
+
+        uid = str(uuid.uuid4())
+        combined_text = f"""
+        XSS Analysis: {state['xss_agent_msg']}
+        SQLi Analysis: {state['SQLi_agent_msg']}
+        Payload Analysis: {state['payload_agent_msg']}
+        """
+        
+
+        embedding = embedder.encode(combined_text).tolist()
+        metadata = {
+            "xss_agent_msg": state['xss_agent_msg'],
+            "SQLi_agent_msg": state['SQLi_agent_msg'],
+            "payload_agent_msg": state['payload_agent_msg'],
+            "threat_detected": state['threat_detected'],
+            "feedback": state['feedback']
+        }
+
+        collection.add(
+            embeddings=[embedding],
+            documents=[combined_text],
+            metadatas=[metadata],
+            ids=[uid]
+        )
+        return {
+            "status": "success",
+            "message": f"Stored analysis with ID: {uid}",
+            "id": uid
+        }
+        
+    except Exception as e:
+        print(f"Error in /store endpoint: {str(e)}")
         return {"error": str(e)}
