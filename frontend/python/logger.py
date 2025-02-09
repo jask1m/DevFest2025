@@ -1,9 +1,13 @@
 import sys
 from scapy.all import sniff, get_if_addr, conf
+import json
 
 
 def show_packet(packet):
-    print(packet.show())
+    packet_data = packet.show(dump=True)  # Convert packet to a string representation
+
+    # Assuming you're using a method to send this to Electron via ipcRenderer
+    print(packet_data)
     sys.stdout.flush()
 
 

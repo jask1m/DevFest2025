@@ -4,6 +4,26 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn } from 'child_process'
 
+function parseScapyPacket(dump) {
+  const packetDict = {};
+  let layer = "Eth";
+
+  dump.toString().split("\n").forEach(line => {
+    line = line.trim();
+
+    if (!line) return; // Skip empty lines
+
+    if (line.includes("###")) {
+      layer = line.replace(/[#\[\]]/g, "").trim();
+      packetDict[layer] = {};
+    } else if (line.includes("=") && layer) {
+      const [key, val] = line.split("=").map(s => s.trim());
+      packetDict[layer][key] = val;
+    }
+  });
+
+  return JSON.stringify(packetDict, null, 4);
+}
 async function runWithPrivileges(scapy_filter: string) {
   console.log(`Requesting privileges via pkexec...`);
 
@@ -11,9 +31,14 @@ async function runWithPrivileges(scapy_filter: string) {
   const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
 
   const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath, scapy_filter], {
-    stdio: "inherit",
+    stdio: ['inherit', 'pipe', 'pipe']
   });
 
+  python.stdout?.on('data', function (data) {
+    const jobj = parseScapyPacket(data)
+
+    console.log(jobj.toString());
+  });
   python.on("close", (code) => {
     console.log(`Python process exited with code ${code}`);
     app.quit()
