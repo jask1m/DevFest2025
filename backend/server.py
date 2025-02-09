@@ -1,3 +1,4 @@
+from typing import Dict, List
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from utils.workflow import create_workflow, create_parallel_workflow
@@ -25,6 +26,7 @@ parallel_workflow = create_parallel_workflow()
 chroma_client = chromadb.PersistentClient(path="./chroma")
 collection = chroma_client.get_or_create_collection(name="collection")
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
+
 
 @app.get("/")
 def root():
@@ -93,40 +95,38 @@ async def handle_store(request: Request):
     try:
         data = await request.json()
         state: ParallelState = data.get("state")
-        
+
         if not state:
             return {"error": "No state provided"}
 
-
         uid = str(uuid.uuid4())
         combined_text = f"""
-        XSS Analysis: {state['xss_agent_msg']}
-        SQLi Analysis: {state['SQLi_agent_msg']}
-        Payload Analysis: {state['payload_agent_msg']}
+        XSS Analysis: {state["xss_agent_msg"]}
+        SQLi Analysis: {state["SQLi_agent_msg"]}
+        Payload Analysis: {state["payload_agent_msg"]}
         """
-        
 
         embedding = embedder.encode(combined_text).tolist()
         metadata = {
-            "xss_agent_msg": state['xss_agent_msg'],
-            "SQLi_agent_msg": state['SQLi_agent_msg'],
-            "payload_agent_msg": state['payload_agent_msg'],
-            "threat_detected": state['threat_detected'],
-            "feedback": state['feedback']
+            "xss_agent_msg": state["xss_agent_msg"],
+            "SQLi_agent_msg": state["SQLi_agent_msg"],
+            "payload_agent_msg": state["payload_agent_msg"],
+            "threat_detected": state["threat_detected"],
+            "feedback": state["feedback"],
         }
 
         collection.add(
             embeddings=[embedding],
             documents=[combined_text],
             metadatas=[metadata],
-            ids=[uid]
+            ids=[uid],
         )
         return {
             "status": "success",
             "message": f"Stored analysis with ID: {uid}",
-            "id": uid
+            "id": uid,
         }
-        
+
     except Exception as e:
         print(f"Error in /store endpoint: {str(e)}")
         return {"error": str(e)}
@@ -139,19 +139,16 @@ async def handle_search(query: str):
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=3,
-            include=["documents", "metadatas"]
+            include=["documents", "metadatas"],
         )
-        
-        if not results['documents'][0]:
+
+        if not results["documents"][0]:
             return {"response": "No relevant security analyses found."}
-        
+
         rag_response = await getRAG(query, results)
-        
-        return {
-            "response": rag_response,
-            "matches_found": len(results['documents'][0])
-        }
-        
+
+        return {"response": rag_response, "matches_found": len(results["documents"][0])}
+
     except Exception as e:
         print(f"Error in /search endpoint: {str(e)}")
         return {"error": str(e)}
@@ -160,9 +157,9 @@ async def handle_search(query: str):
 async def getRAG(query: str, search_results: Dict[str, List]) -> str:
     try:
         context = ""
-        for i in range(len(search_results['documents'][0])):
-            metadata = search_results['metadatas'][0][i]
-            context += f"\nSecurity Analysis {i+1}:\n"
+        for i in range(len(search_results["documents"][0])):
+            metadata = search_results["metadatas"][0][i]
+            context += f"\nSecurity Analysis {i + 1}:\n"
             context += f"XSS Analysis: {metadata['xss_agent_msg']}\n"
             context += f"SQL Injection Analysis: {metadata['SQLi_agent_msg']}\n"
             context += f"Payload Analysis: {metadata['payload_agent_msg']}\n"
@@ -190,19 +187,17 @@ async def getRAG(query: str, search_results: Dict[str, List]) -> str:
                 "role": "system",
                 "content": "You are a cybersecurity analysis assistant. Provide clear, accurate summaries of security findings.",
             },
-            {
-                "role": "user",
-                "content": prompt
-            }
+            {"role": "user", "content": prompt},
         ]
 
         response = llm.chat.completions.create(
             messages=messages,
             temperature=0.1,
         )
-        
+
         return response.choices[0].message.content
-        
+
     except Exception as e:
         print(f"Error in getRAG: {str(e)}")
         raise e
+

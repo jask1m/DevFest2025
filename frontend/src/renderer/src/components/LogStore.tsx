@@ -6,7 +6,7 @@ import { AlertCircle, ArrowRight } from "lucide-react"
 
 interface NetworkLog {
   id: string
-  timestamp: string 
+  timestamp: string
   type: "info" | "warning" | "error"
   source: string
   destination: string
@@ -30,7 +30,7 @@ const generateMockLog = (): NetworkLog => {
   }
 }
 
-export default function NetworkDashboard() {
+export default function LogStore() {
   const [logs, setLogs] = useState<NetworkLog[]>([])
 
   useEffect(() => {
@@ -68,21 +68,21 @@ export default function NetworkDashboard() {
               {logs.map((log) => (
                 <div
                   key={log.id}
-                  className={`rounded-lg bg-zinc-950 p-3 
-                    ${log.isMalicious 
-                      ? 'border-l-4 border-red-500 bg-red-500/5' 
+                  className={`rounded-lg bg-zinc-950 p-3
+                    ${log.isMalicious
+                      ? 'border-l-4 border-red-500 bg-red-500/5'
                       : 'border-l-4 border-emerald-500 bg-emerald-500/5'}`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge 
-                      variant={getBadgeVariant(log.type)} 
+                    <Badge
+                      variant={getBadgeVariant(log.type)}
                       className="h-5 font-medium"
                     >
                       {log.type === "error" && <AlertCircle className="w-3 h-3 mr-1" />}
                       {log.type.toUpperCase()}
                     </Badge>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className="bg-zinc-900 text-zinc-400 border-zinc-800"
                     >
                       {log.protocol}
@@ -91,7 +91,7 @@ export default function NetworkDashboard() {
                       {new Date(log.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-12 gap-4 items-center text-sm">
                     <div className="col-span-4 flex items-center gap-2">
                       <span className="text-zinc-500">From:</span>
