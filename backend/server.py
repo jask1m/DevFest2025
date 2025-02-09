@@ -7,6 +7,7 @@ import chromadb
 import uuid
 from sentence_transformers import SentenceTransformer
 from utils.config import create_llm
+from typing import Dict, List, Any
 
 
 app = FastAPI()
