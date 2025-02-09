@@ -2,25 +2,46 @@ import { useState } from "react"
 import { Button } from "./components/ui/button"
 import { Input } from "./components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card"
+import { Alert, AlertDescription } from "./components/ui/alert"
 import Main from "./components/Main"
 
 export default function App() {
   const [useCase, setUseCase] = useState("")
   const [inputValue, setInputValue] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const data = await fetch("http://127.0.0.1:8000/query", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ use_case: inputValue }),
-    })
-    const criteria = await data.json()["criteria"]
-    console.log("Criteria for llm: ", criteria);
-    // at the very end
-    setUseCase(inputValue)
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ query: inputValue }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      setUseCase(inputValue)
+    } catch (err) {
+      console.error("Error:", err)
+      setError(err instanceof Error ? err.message : "An error occurred while processing your request")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (useCase) {
@@ -41,9 +62,15 @@ export default function App() {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Enter your use case..."
               className="w-full"
+              disabled={isLoading}
             />
-            <Button type="submit" className="w-full">
-              Submit
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Loading..." : "Submit"}
             </Button>
           </form>
         </CardContent>
