@@ -145,7 +145,6 @@ async def generate_diagram(request: Request):
         
         prompt = f"""Generate a simple, high-level Mermaid flowchart diagram for the following security solution:
                     {solution}
-
                     Requirements for the diagram:
                     1. Use 'flowchart TD' for vertical layout (top-down)
                     2. Keep it high-level with maximum 4-6 main nodes
@@ -154,15 +153,15 @@ async def generate_diagram(request: Request):
                     5. Focus on the main security solution steps only
                     6. Avoid complex branching or parallel paths
                     7. Use clear, simple shapes (mainly rectangles)
-
-                    The diagram should be immediately understandable at a glance.
-                    Return ONLY the Mermaid diagram code without any explanation or markdown code blocks."""
+                    8. DO NOT include any markdown formatting or code blocks
+                    9. Start directly with 'flowchart TD'
+                    Return ONLY the raw Mermaid diagram code with no additional formatting or explanation."""
 
         chat_completion = groq_client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a technical diagram generator that creates simple, high-level Mermaid flowcharts for security concepts. Focus on clarity and simplicity over detail."
+                    "content": "You are a technical diagram generator that creates simple, high-level Mermaid flowcharts for security concepts. Return only the raw Mermaid diagram code without any markdown formatting or code blocks."
                 },
                 {
                     "role": "user",
@@ -174,15 +173,26 @@ async def generate_diagram(request: Request):
         )
         
         mermaid_code = chat_completion.choices[0].message.content.strip()
-        if mermaid_code.startswith("```mermaid"):
-            mermaid_code = mermaid_code.replace("```mermaid", "").strip()
-        if mermaid_code.startswith("```"):
-            mermaid_code = mermaid_code.replace("```", "").strip()
         
-        # Ensure it starts with flowchart TD
-        if not mermaid_code.startswith("flowchart TD"):
+        # More robust cleaning of the response
+        # Remove any markdown code block indicators
+        mermaid_code = mermaid_code.replace("```mermaid", "")
+        mermaid_code = mermaid_code.replace("```", "")
+        
+        # Remove any leading/trailing whitespace and newlines
+        mermaid_code = mermaid_code.strip()
+        
+        # Ensure it starts with flowchart TD and only once
+        if "flowchart TD" in mermaid_code:
+            # Remove any duplicate flowchart TD declarations
+            mermaid_code = mermaid_code.replace("flowchart TD", "", mermaid_code.count("flowchart TD") - 1)
+        else:
             mermaid_code = "flowchart TD\n" + mermaid_code.replace("flowchart LR", "").replace("graph LR", "")
         
+        # Validate basic Mermaid syntax
+        if not any(["-->" in mermaid_code or "-.->" in mermaid_code or "==>" in mermaid_code]):
+            raise ValueError("Invalid Mermaid diagram: No valid connections found")
+            
         return {"diagram": mermaid_code}
         
     except Exception as e:

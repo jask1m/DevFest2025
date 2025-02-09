@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { Search, Mic, Square } from "lucide-react"
 import { Button } from "./ui/button"
 import mermaid from 'mermaid'
@@ -179,71 +179,84 @@ export default function SearchPanel() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Search Form */}
-      <form onSubmit={handleSubmit} className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search or ask anything..."
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 py-2 pl-10 pr-12 text-zinc-100 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-          />
-          <button
-            type="button"
-            onClick={isRecording ? stopRecording : startRecording}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 focus:outline-none"
-          >
-            {isRecording ? (
-              <Square className="h-4 w-4" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </button>
+      {/* Enhanced Search Form */}
+      <form onSubmit={handleSubmit} className="mb-4 relative">
+        <div className="relative group">
+          {/* Gradient border effect container */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500/50 via-purple-500/50 to-indigo-500/50 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-500"></div>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-300" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search or ask anything..."
+              className="w-full rounded-lg border border-indigo-900/50 bg-gradient-to-r from-zinc-900 via-zinc-900/95 to-zinc-900 py-3 pl-10 pr-12 text-indigo-100 placeholder-indigo-300/50 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 shadow-lg transition-all duration-300"
+            />
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-200 focus:outline-none transition-colors duration-200"
+            >
+              {isRecording ? (
+                <Square className="h-4 w-4 animate-pulse" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
+        
         {recordingStatus && (
-          <div className="mt-2 text-sm text-zinc-400">
+          <div className="mt-2 text-sm text-indigo-300/80 animate-fade-in">
             {recordingStatus}
           </div>
         )}
       </form>
 
-      {/* Results Area (keeping existing implementation) */}
-      <div className="flex-1 overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+      {/* Enhanced Results Area */}
+      <div className="flex-1 overflow-auto rounded-lg border border-indigo-900/20 bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-900 p-6 shadow-lg">
         {isLoading && (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-400"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500/20 border-t-indigo-500"></div>
           </div>
         )}
         
         {error && (
-          <p className="text-red-400">{error}</p>
+          <p className="text-red-400 bg-red-900/10 px-4 py-2 rounded-lg">{error}</p>
         )}
         
         {result && !isLoading && (
-          <div className="text-zinc-100 space-y-4">
+          <div className="text-indigo-100 space-y-4">
             <div className="whitespace-pre-wrap">
               {result.split("\n\n").map((paragraph, idx) => (
-                <p key={idx} className="mb-4">
+                <p key={idx} className="mb-4 leading-relaxed">
                   {paragraph}
                 </p>
               ))}
             </div>
             
-            <div className="flex flex-col items-start space-y-4 pt-4 border-t border-zinc-800">
+            <div className="flex flex-col items-start space-y-4 pt-4 border-t border-indigo-900/20">
               <Button
                 onClick={() => result && generateDiagram(result)}
                 disabled={isGeneratingDiagram}
                 variant="outline"
                 size="sm"
-                className="text-zinc-300 hover:text-zinc-100"
+                className="bg-gradient-to-r from-indigo-900/50 via-purple-900/50 to-indigo-900/50 text-indigo-200 hover:text-white border-indigo-800/50 hover:border-indigo-700/50 transition-all duration-300 shadow-lg hover:shadow-indigo-900/20"
               >
-                {isGeneratingDiagram ? 'Generating diagram...' : 'Visualize solution diagram'}
+                {isGeneratingDiagram ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border border-t-indigo-200"></div>
+                    Generating diagram...
+                  </span>
+                ) : (
+                  'Visualize solution diagram'
+                )}
               </Button>
               
               {diagram && (
-                <div className="w-full bg-zinc-800 rounded-lg p-6 mt-4">
+                <div className="w-full bg-gradient-to-b from-zinc-800/50 to-zinc-900 rounded-lg p-6 mt-4 border border-indigo-900/20 shadow-lg">
                   <div className="min-h-[600px] flex items-center justify-center">
                     <pre className="mermaid w-full">
                       {diagram}
