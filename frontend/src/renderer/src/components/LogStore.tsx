@@ -57,7 +57,7 @@ export default function LogStore() {
   }
 
   return (
-    <div className="w-full max-w-4xl p-6 h-full bg-black">
+    <div className="w-full max-w-[64rem] py-4 px-2 h-full bg-black">
       <div className="rounded-lg h-full flex flex-col bg-zinc-900 border border-zinc-800">
         <CardHeader className="border-b border-zinc-800 py-4">
           <CardTitle className="text-zinc-100">Network Logs</CardTitle>
