@@ -2,8 +2,37 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { spawn } from 'child_process'
+import { spawn, exec } from 'child_process'
+import { promisify } from 'util'
+const execAsync = promisify(exec);
 
+// Function to check if we have root/admin privileges
+async function checkPrivileges() {
+  if (process.platform === 'win32') {
+    const { stdout } = await execAsync('net session');
+    return stdout.length > 0;
+  } else {
+    return process?.getuid?.() === 0;
+  }
+}
+async function runWithPrivileges() {
+  console.log(`Requesting privileges via pkexec...`);
+
+  const pythonScriptPath = path.join(app.getAppPath(), "python", "logger.py");
+  const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
+
+  const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath], {
+    stdio: "inherit",
+  });
+
+  python.on("close", (code) => {
+    console.log(`Python process exited with code ${code}`);
+  });
+
+  python.on("error", (err) => {
+    console.error(`Failed to start process: ${err}`);
+  });
+}
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -38,7 +67,6 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -64,21 +92,7 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
 
   })
-  const pythonScriptPath = path.join(app.getAppPath(), "python", "test.py");
-  const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
-  let python = spawn(pythonExecutablePath, [pythonScriptPath]);
-
-  python.stdout.on("data", (data) => {
-    console.log(`Python Output: ${data}`);
-  });
-
-  python.stderr.on("data", (data) => {
-    console.error(`Python Error: ${data}`);
-  });
-
-  python.on("close", (code) => {
-    console.log(`Python process exited with code ${code}`);
-  });
+  runWithPrivileges();
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
