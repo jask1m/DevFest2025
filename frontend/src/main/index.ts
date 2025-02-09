@@ -17,7 +17,10 @@ function createWindow(): void {
       sandbox: false
     }
   })
-
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.maximize();
+    mainWindow.show();
+  });
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
@@ -62,8 +65,8 @@ app.whenReady().then(() => {
 
   })
   const pythonScriptPath = path.join(app.getAppPath(), "python", "test.py");
-
-  let python = spawn("python3", [pythonScriptPath]);
+  const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
+  let python = spawn(pythonExecutablePath, [pythonScriptPath]);
 
   python.stdout.on("data", (data) => {
     console.log(`Python Output: ${data}`);
