@@ -1,5 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import path, { join } from 'path'
+import { platform } from 'os'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn } from 'child_process'
@@ -10,7 +11,21 @@ async function runWithPrivileges(scapy_filter: string) {
   const pythonScriptPath = path.join(app.getAppPath(), "python", "logger.py");
   const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
 
-  const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath, scapy_filter], {
+  const isWindows = platform() === 'win32';
+  const isMac = platform() === 'darwin';
+  
+  // Determine the privilege escalation command based on OS
+  let privilegeCommand: string;
+  if (isWindows) {
+    privilegeCommand = 'pkexec';
+  } else if (isMac) {
+    privilegeCommand = 'sudo';
+  } else {
+    // Linux and other Unix-like systems
+    privilegeCommand = 'pkexec';
+  }
+
+  const python = spawn(privilegeCommand, [pythonExecutablePath, pythonScriptPath, scapy_filter], {
     stdio: "inherit",
   });
 
