@@ -26,12 +26,25 @@ function parseScapyPacket(dump) {
   return JSON.stringify(packetDict, null, 4);
 }
 async function runWithPrivileges(scapy_filter: string) {
+  const isWindows = platform() === 'win32';
+  const isMac = platform() === 'darwin';
+  
+  // Determine the privilege escalation command based on OS
+  let privilegeCommand: string;
+  if (isWindows) {
+    privilegeCommand = 'pkexec';
+  } else if (isMac) {
+    privilegeCommand = 'sudo';
+  } else {
+    // Linux and other Unix-like systems
+    privilegeCommand = 'pkexec';
+  }
   console.log(`Requesting privileges via pkexec...`);
 
   const pythonScriptPath = path.join(app.getAppPath(), "python", "logger.py");
   const pythonExecutablePath = path.join(app.getAppPath(), "python", "venv", "bin", "python3")
 
-  const python = spawn("pkexec", [pythonExecutablePath, pythonScriptPath, scapy_filter], {
+  const python = spawn(privilegeCommand, [pythonExecutablePath, pythonScriptPath, scapy_filter], {
     stdio: ['inherit', 'pipe', 'pipe']
   });
 
