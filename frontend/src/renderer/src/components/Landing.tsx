@@ -43,11 +43,7 @@ export default function Landing() {
 
       setUseCase(inputValue)
     } catch (err: any) {
-      if (err.startsWith("Recursion limit")) {
-        setError("Please enter a more specific description.")
-      } else {
-        setError("An error occurred while processing your request")
-      }
+      setError("Please enter a more specific description.")
       console.error("Error:", err)
     } finally {
       setIsLoading(false)
