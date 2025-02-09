@@ -1,6 +1,5 @@
 import sys
 from scapy.all import sniff, get_if_addr, conf
-import json
 
 
 def show_packet(packet):
@@ -25,7 +24,7 @@ print(my_ip)
 #     ")"
 # )
 filter_str = sys.argv[1]
-filter_str += f" and (dst host {my_ip})"
+# filter_str += f" and (dst host {my_ip})"
 print(filter_str)
 # count = 0
 #
@@ -40,4 +39,8 @@ print(filter_str)
 #
 
 # Start sniffing
-sniff(filter=filter_str, prn=show_packet, store=0)
+try:
+    sniff(filter=filter_str, prn=show_packet, store=0)
+except Exception as e:
+    print(filter_str)
+    print(e)

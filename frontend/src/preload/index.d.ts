@@ -2,7 +2,7 @@ import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface API {
   runWithPrivileges(filter: string): void
-  onPacketData(callback: (data: string) => void): void
+  onPacketData(callback: (data: Dict) => void): void
   onPythonProcessEnded(callback: (code: number) => void): void
   onPythonProcessError(callback: (error: string) => void): void
   removeAllListeners(): void

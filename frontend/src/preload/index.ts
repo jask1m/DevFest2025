@@ -1,11 +1,42 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-
+let packetDataListener: ((_event: any, data: any) => void) | null = null
 // Custom APIs for renderer
 const api = {
-  runWithPrivileges: (filter: string) => ipcRenderer.send('run-with-privileges', filter),
-  onPacketData: (callback: (data: string) => void) =>
-    ipcRenderer.on('packet-data', (_event, data) => callback(data)),
+  onPacketData: (callback: (data: any) => void) => {
+    // Remove existing listener if there is one
+    if (packetDataListener) {
+      ipcRenderer.removeListener('packet-data', packetDataListener)
+    }
+
+    // Create new listener
+    packetDataListener = (_event: any, data: any) => {
+      try {
+        if (data) {
+          callback(data)
+        }
+      } catch (error) {
+        console.error('Error in packet data callback:', error)
+      }
+    }
+
+    // Add new listener
+    ipcRenderer.on('packet-data', packetDataListener)
+
+    // Return cleanup function
+    return () => {
+      if (packetDataListener) {
+        ipcRenderer.removeListener('packet-data', packetDataListener)
+        packetDataListener = null
+      }
+    }
+  },
+  removeListeners: () => {
+    if (packetDataListener) {
+      ipcRenderer.removeListener('packet-data', packetDataListener)
+      packetDataListener = null
+    }
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

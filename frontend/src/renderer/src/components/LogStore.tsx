@@ -5,38 +5,45 @@ import { Badge } from "./ui/badge"
 import { AlertCircle, ArrowRight } from "lucide-react"
 
 interface NetworkLog {
-  id: string
-  timestamp: string
+  id: number,
+  timestamp: number,
   type: "info" | "warning" | "error"
-  source: string
-  destination: string
-  protocol: string
+  source_mac: string
+  destination_mac: string
+  source_ip: string
+  destination_ip: string,
+  ttl: number,
+  protocols: string
   message: string
   isMalicious: boolean
 }
 
-const generateMockLog = (): NetworkLog => {
-  const protocols = ["TCP", "UDP", "HTTP", "HTTPS"]
-  const types: Array<"info" | "warning" | "error"> = ["info", "warning", "error"]
-  return {
-    id: Math.random().toString(36).substr(2, 9),
-    timestamp: new Date().toISOString(),
-    type: types[Math.floor(Math.random() * types.length)],
-    source: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-    destination: `10.0.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-    protocol: protocols[Math.floor(Math.random() * protocols.length)],
-    message: `Packet transferred: ${Math.floor(Math.random() * 1500)} bytes`,
-    isMalicious: Math.random() < 0.2,
-  }
-}
 
-window.api.onPacketData((data) => {
-  console.log('Received packet data:', data);
-  // Handle the packet data here
-});
 export default function LogStore() {
   const [logs, setLogs] = useState<NetworkLog[]>([])
-
+  const [count, setCount] = useState(0)
+  window.api.onPacketData((data) => {
+    data = JSON.parse(data)
+    console.log('Received packet data:', data);
+    const new_packet: NetworkLog = {
+      id: count,
+      timestamp: Date.now(),
+      type: 'info',
+      source_mac: data["Ethernet"]["src"],
+      destination_mac: data["Ethernet"]["dst"],
+      source_ip: data["IP"]["src"],
+      destination_ip: data["IP"]["dst"],
+      ttl: data[
+        "IP"
+      ]["ttl"],
+      protocols: Object.keys(data).join(', '),
+      message: data,
+      isMalicious: false,
+    }
+    setCount(count + 1);
+    setLogs([new_packet, ...logs]);
+    console.log(count);
+  });
   // useEffect(() => {
   //   const initialLogs = Array(10).fill(null).map(generateMockLog)
   //   setLogs(initialLogs)
@@ -80,7 +87,7 @@ export default function LogStore() {
                   <div className="flex items-center gap-2 mb-2">
                     <Badge
                       variant={getBadgeVariant(log.type)}
-                      className="h-5 font-medium"
+                      className="h-5 font-medium text-white bg-emerald-500"
                     >
                       {log.type === "error" && <AlertCircle className="w-3 h-3 mr-1" />}
                       {log.type.toUpperCase()}
@@ -89,26 +96,50 @@ export default function LogStore() {
                       variant="outline"
                       className="bg-zinc-900 text-zinc-400 border-zinc-800"
                     >
-                      {log.protocol}
+                      {log.protocols}
                     </Badge>
                     <span className="text-xs text-zinc-500 ml-auto">
                       {new Date(log.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-12 gap-4 items-center text-sm">
-                    <div className="col-span-4 flex items-center gap-2">
-                      <span className="text-zinc-500">From:</span>
-                      <code className="font-mono text-zinc-300">{log.source}</code>
+                  {/* Address Layout */}
+                  <div className="grid grid-cols-7 gap-2">
+                    {/* Source Address Column */}
+                    <div className="col-span-1">
+                      <div className="flex flex-col">
+                        {/* Source IP */}
+                        <div className="mb-2">
+                          <span className="text-zinc-500 text-sm">Source IP</span>
+                          <div className="font-mono text-zinc-300 text-sm">{log.source_ip}</div>
+                        </div>
+                        {/* Source MAC */}
+                        <div>
+                          <span className="text-zinc-500 text-sm">Source MAC</span>
+                          <div className="font-mono text-zinc-300 text-sm">{log.source_mac}</div>
+                        </div>
+                      </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-zinc-600" />
-                    <div className="col-span-4 flex items-center gap-2">
-                      <span className="text-zinc-500">To:</span>
-                      <code className="font-mono text-zinc-300">{log.destination}</code>
+
+                    {/* Arrow Column */}
+                    <div className="col-span-1 flex items-center justify-center">
+                      <ArrowRight className="w-6 h-6 text-zinc-600" />
                     </div>
-                    <div className="col-span-3 flex items-center gap-2">
-                      <span className="text-zinc-500">Size:</span>
-                      <span className="text-zinc-300">{log.message.split(': ')[1]}</span>
+
+                    {/* Destination Address Column */}
+                    <div className="col-span-5">
+                      <div className="flex flex-col">
+                        {/* Destination IP */}
+                        <div className="mb-2">
+                          <span className="text-zinc-500 text-sm">Destination IP</span>
+                          <div className="font-mono text-zinc-300 text-sm">{log.destination_ip}</div>
+                        </div>
+                        {/* Destination MAC */}
+                        <div>
+                          <span className="text-zinc-500 text-sm">Destination MAC</span>
+                          <div className="font-mono text-zinc-300 text-sm">{log.destination_mac}</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
